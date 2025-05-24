@@ -13,9 +13,27 @@ output:
 -spec eval_division(Operand1::float(), Operand2::float()) -> float().
 eval_division(Operand1, Operand2) ->
   case Operand2 of
-    +0.0 -> error(division_by_zero);
-    -0.0 -> error(division_by_zero);
+    +0.0 -> error(?DIVISION_BY_ZERO);
+    -0.0 -> error(?DIVISION_BY_ZERO);
     _ -> Operand1 / Operand2
+  end.
+
+
+-doc """
+input
+  Operand1, Operand2
+output:
+  returns 'Operand1' raised to the exponent 'Operand2'
+""".
+-spec eval_power(Operand1::float(), Operand2::float()) -> float().
+eval_power(Operand1, Operand2) ->
+  if Operand1 == 0, Operand2 == 0 -> error(?POWER_ERROR);
+    true ->
+      try math:pow(Operand1, Operand2) of
+        Result when is_float(Result) -> Result
+      catch
+        _:_ -> error(?POWER_ERROR)
+      end
   end.
 
 
@@ -30,7 +48,7 @@ output:
 eval_unary_op(Op, [Operand | Stack_tail]) ->
   Result = case Op of
              ?SIGN_OP -> -1 * Operand;
-             _ -> error(operator_not_unary)
+             _ -> error(?OPERATOR_NOT_UNARY)
            end,
   % pop the operand, push the result, then
   % return the updated stack
@@ -51,8 +69,8 @@ eval_binary_op(Op, [Operand2, Operand1 | Stack_tail]) ->
              ?SUB_OP -> Operand1 - Operand2;
              ?MUL_OP -> Operand1 * Operand2;
              ?DIV_OP -> eval_division(Operand1, Operand2);
-             ?POW_OP -> math:pow(Operand1, Operand2);
-             _ -> error(operator_not_binary)
+             ?POW_OP -> eval_power(Operand1, Operand2);
+             _ -> error(?OPERATOR_NOT_BINARY)
            end,
   % pop the two operands, push the result, then
   % return the updated stack
@@ -73,7 +91,7 @@ eval_op(Op, Stack = [X, Y | _]) when is_number(X), is_number(Y)->
     _ -> eval_binary_op(Op, Stack)
   end;
 eval_op(Op, Stack = [X | _]) when is_number(X) -> eval_unary_op(Op, Stack);
-eval_op(_, _) -> error(invalid_operands).
+eval_op(_, _) -> error(?INVALID_EXPRESSION).
 
 
 -doc """
@@ -89,7 +107,7 @@ eval([], [Result]) -> Result;
 
 % the stack should contain a single element (the result)
 % after the input had been consumed
-eval([], _) -> error(invalid_expression);
+eval([], _) -> error(?INVALID_EXPRESSION);
 
 eval([X | Y], Stack) ->
   case X of
