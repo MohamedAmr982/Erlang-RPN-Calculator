@@ -45,7 +45,7 @@ output:
   parenthesis.
 """.
 -spec handle_closing_paren(Rpe_list::list(), Stack::list()) -> {list(), list()}.
-handle_closing_paren(_, []) -> error(unbalanced_paren);
+handle_closing_paren(_, []) -> error(?UNBALANCED_PAREN);
 handle_closing_paren(Rpe_list, [Top | Stack_tail]) ->
   case Top of
     ?OPENING_PAREN -> {Rpe_list, Stack_tail};
@@ -96,8 +96,13 @@ Tail recursive implementation of to_rpn/1
 to_rpn([], Rpe_list, []) -> Rpe_list;
 
 % no more input, pop all items from the stack
+% except if the stack contains opening parens
+% then parens are unbalanced
 to_rpn([], Rpe_list, [Top | Stack_tail]) ->
-  to_rpn([], [Top | Rpe_list], Stack_tail);
+  case Top of
+    ?OPENING_PAREN -> error(?UNBALANCED_PAREN);
+    _ -> to_rpn([], [Top | Rpe_list], Stack_tail)
+  end;
 
 to_rpn([X | Y], Rpe_list, Stack) ->
   {Updated_rpe_list, Updated_stack} = case X of
