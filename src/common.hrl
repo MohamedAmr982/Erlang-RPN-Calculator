@@ -18,7 +18,8 @@
 -define(UNKNOWN_SYMBOL, unknown_symbol).
 -define(INVALID_NUMBER, invalid_number).
 
-
+% rpn errors
+-define(UNBALANCED_PAREN, unbalanced_paren).
 
 
 -endif.
